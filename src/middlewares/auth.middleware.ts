@@ -4,11 +4,13 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization;
   
   if (!token) {
-    return res.status(401).json({ message: "Não autorizado" });
+    res.status(401).json({ message: "Não autorizado" });
+    return;
   }
   
   if (token !== "meuTokenSecreto") {
-    return res.status(403).json({ message: "Token inválido" });
+    res.status(403).json({ message: "Token inválido" });
+    return;
   }
 
   next();
