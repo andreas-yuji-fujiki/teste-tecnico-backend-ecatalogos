@@ -4,10 +4,10 @@ import cors from 'cors';
 import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from 'dotenv';
-import { corsConfig } from "./cors/corsConfig.js";
+import { corsConfig } from "./cors/corsConfig";
 
-import router from "./routes/user.routes.js";
-import { globalErrorMiddleware } from "./middlewares/globalErrorMiddlewares.js";
+import router from "./routes/user.routes";
+import { globalErrorMiddleware } from "./middlewares/globalErrorMiddlewares";
 
 dotenv.config();
 
