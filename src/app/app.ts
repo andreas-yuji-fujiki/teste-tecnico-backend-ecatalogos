@@ -4,12 +4,14 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
+
 import corsConfig from "../config/cors.config";
-// import routes from "./routes/index";
 // import { errorMiddleware } from "./middlewares/error.middleware";
 
+import { allAppRouters } from "../routes";
+
 // dotenv can be used in here
-dotenv.config()
+dotenv.config();
 
 // app class
 class ExpressApp {
@@ -20,12 +22,14 @@ class ExpressApp {
         this.app = express();
         this.port = process.env.PORT || 5000;
 
-        this.middlewares();
-        // this.routes();
+        this.essentialMiddlewares();
         // this.errorHandling();
-    }
 
-    private middlewares(): void {
+        // defining to use all routers
+        this.app.use(allAppRouters);
+    };
+
+    private essentialMiddlewares(): void {
         this.app.use(express.json());
         this.app.use(cors(corsConfig));
         this.app.use(helmet());
@@ -33,12 +37,8 @@ class ExpressApp {
         // morgan is not suposed to be used in production app enviroment
         if (process.env.NODE_ENV !== "production") {
         this.app.use(morgan("dev"));
-        }      
-    }
-
-    // private routes(): void {
-    //   this.app.use("/api/users", userRoutes);
-    // }
+        }; 
+    };
 
     // private errorHandling(): void {
     //   this.app.use(errorMiddleware);
@@ -46,9 +46,9 @@ class ExpressApp {
 
     public listen(): void {
         this.app.listen(this.port, () => {
-        console.log(`API running on http://localhost:${this.port}`);
+            console.log(`API running on http://localhost:${this.port}`);
         });
-    }
-}
+    };
+};
   
   export default ExpressApp;

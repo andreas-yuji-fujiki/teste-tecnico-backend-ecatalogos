@@ -1,5 +1,14 @@
 import { Router } from "express";
-const productsRouter = Router()
 
-productsRouter.get('/products')
-productsRouter.get('/products/:id')
+
+// defining product router
+const productsRouter = Router();
+
+
+// defining endpoints
+productsRouter.get('/');
+productsRouter.get('/:id');
+
+
+// exporting all product routes
+export { productsRouter };
