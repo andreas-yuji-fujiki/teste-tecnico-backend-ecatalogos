@@ -21,5 +21,11 @@ export const ProductController = {
       const companyId = req.body.companyId;
       const data = await ProductService.create(req.body, companyId);
       res.status(201).json(data);  // Retorna o produto criado com status 201
+  },
+
+  async delete(req: Request, res: Response) {
+    const productId = req.params.id
+    const response = await ProductService.delete(Number(productId))
+    res.status(201).json(response);
   }
 };

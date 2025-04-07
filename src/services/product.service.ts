@@ -1,6 +1,5 @@
 import prisma from '../config/database.config';
 import { Request, Response } from 'express';
-import { Variant, Sku, Brand } from '@prisma/client';
 import { ProductWithVariantsTypes } from '../types/product.types';
 
 export class ProductService {
@@ -13,14 +12,19 @@ export class ProductService {
     if (query?.gender) filters.gender = query.gender;
     if (query?.categoryId) filters.categoryId = Number(query.categoryId);
     
+    // Adiciona o filtro para garantir que deletedAt seja null
+    filters.deletedAt = null;
+  
     const products = await prisma.product.findMany({
       where: filters,
       include: {
         variants: {
+          where: { deletedAt: null },  // Filtra variantes não deletadas
           include: {
             skus: {
+              where: { deletedAt: null },  // Filtra SKUs não deletados
               include: {
-                priceTablesSkus: true, // Garantir que o SKU tenha a tabela de preços vinculada
+                priceTablesSkus: true,
               },
             },
           },
@@ -30,34 +34,29 @@ export class ProductService {
         subcategory: true,
       },
     });
-  
+    
     return products.map(product => {
-      // Mapeia as variantes do produto
       const variants = product.variants.map(variant => {
-        // Filtra os skus válidos que possuem a tabela de preço
         const validSkus = variant.skus.filter(sku => sku.priceTablesSkus.length > 0);
   
-        // Se não tiver todos os skus válidos, não retorna a variante
         if (validSkus.length !== variant.skus.length) {
-          return null; // Retorna null para variantes inválidas
+          return null;
         }
   
-        // Mapeia a variante com seus skus válidos
         return {
           variant_name: variant.name,
-          hex_code: variant.hexCode ?? null,  // Usa null se não houver hexCode
+          hex_code: variant.hexCode ?? null,
           skus: validSkus.map(sku => ({
             id: sku.id,
             size: sku.size,
-            price: sku.price.toNumber(),  // Converte Decimal para number
+            price: sku.price.toNumber(),
             stock: sku.stock,
-            open_grid: product.openGrid ?? false,  // Assume false se openGrid for undefined
-            min_quantity: sku.minQuantity ?? 0,  // Assume 0 se minQuantity for null
+            open_grid: product.openGrid ?? false,
+            min_quantity: sku.minQuantity ?? 0,
           })),
         };
-      }).filter(variant => variant !== null); // Remove variantes inválidas
+      }).filter(variant => variant !== null);
   
-      // Retorna o produto com as variantes agrupadas
       return {
         id: product.id,
         name: product.name,
@@ -68,64 +67,63 @@ export class ProductService {
         prompt_delivery: product.promptDelivery,
         description: product.description ?? null,
         type: product.type ?? null,
-        variants: variants,  // Adiciona as variantes no produto
+        variants: variants,
         companies: {
           key: product.companyId,
         },
         brand: product.brand?.name ?? "",
       };
     });
-  }  
+  }
 
   static getById = async (productId: number) => {
+    // Verifica se o produto está marcado como deletado
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
         variants: {
+          where: { deletedAt: null },  // Filtra variantes não deletadas
           include: {
             skus: {
+              where: { deletedAt: null },  // Filtra SKUs não deletados
               include: {
-                priceTablesSkus: true,  // Inclui as tabelas de preço para os SKUs
+                priceTablesSkus: true,
               },
             },
           },
         },
-        category: true,  // Inclui a categoria
-        subcategory: true,  // Inclui a subcategoria
-        brand: true,  // Inclui a marca
+        category: true,
+        subcategory: true,
+        brand: true,
       },
     });
   
-    if (!product) {
+    // Verifica se o produto foi encontrado e se o campo deletedAt é null (não deletado)
+    if (!product || product.deletedAt) {
       throw new Error("Produto não encontrado");
     }
   
-    // Mapeia as variantes do produto
     const variants = product.variants.map(variant => {
-      // Filtra os SKUs válidos que possuem a tabela de preço
       const validSkus = variant.skus.filter(sku => sku.priceTablesSkus.length > 0);
   
-      // Se não tiver todos os skus válidos, não retorna a variante
       if (validSkus.length !== variant.skus.length) {
-        return null; // Retorna null para variantes inválidas
+        return null;
       }
   
-      // Mapeia a variante com seus skus válidos
       return {
         variant_name: variant.name,
-        hex_code: variant.hexCode ?? null,  // Usa null se não houver hexCode
+        hex_code: variant.hexCode ?? null,
         skus: validSkus.map(sku => ({
           id: sku.id,
           size: sku.size,
-          price: sku.price.toNumber(),  // Converte Decimal para number
+          price: sku.price.toNumber(),
           stock: sku.stock,
-          open_grid: product.openGrid ?? false,  // Assume false se openGrid for undefined
-          min_quantity: sku.minQuantity ?? 0,  // Assume 0 se minQuantity for null
+          open_grid: product.openGrid ?? false,
+          min_quantity: sku.minQuantity ?? 0,
         })),
       };
-    }).filter(variant => variant !== null);  // Remove variantes inválidas
+    }).filter(variant => variant !== null);
   
-    // Retorna o produto com as variantes agrupadas
     return {
       id: product.id,
       name: product.name,
@@ -136,13 +134,13 @@ export class ProductService {
       prompt_delivery: product.promptDelivery,
       description: product.description ?? null,
       type: product.type ?? null,
-      variants,  // Adiciona as variantes no produto
+      variants,
       companies: {
         key: product.companyId,
       },
       brand: product.brand?.name ?? "",
     };
-  };
+  };  
   
   static async create(req: Request, res: Response): Promise<void> {
     try {
@@ -242,4 +240,53 @@ export class ProductService {
       res.status(500).json({ error: "An error occurred while creating the product" });
     }
   }
+
+  static delete = async (productId: number) => {
+    if (!productId) {
+      throw new Error('ID do produto não fornecido');
+    }
+
+    const deletedAt = new Date(); // Obtém a data e hora atual
+
+    // Obtém o produto com as variantes
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        variants: true
+      },
+    });
+
+    // Verifica se o produto foi encontrado
+    if (!product) {
+      throw new Error('Produto não encontrado');
+    }
+
+    // Atualiza o produto, marcando a data de deletação
+    await prisma.product.update({
+      where: { id: productId },
+      data: {
+        deletedAt: deletedAt
+      },
+    });
+
+    // Atualiza as variantes associadas ao produto
+    await prisma.variant.updateMany({
+      where: { productId: productId },
+      data: {
+        deletedAt: deletedAt
+      },
+    });
+
+    // Atualiza os SKUs associados às variantes
+    await prisma.sku.updateMany({
+      where: {
+        variantId: { in: product.variants.map(variant => variant.id) }
+      },
+      data: {
+        deletedAt: deletedAt
+      },
+    });
+
+    return { message: "Produto deletado com sucesso." };
+  };
 }
