@@ -8,7 +8,7 @@ import { Router } from "express";
 // defining endpoints with their respective functions
 const allAppRouters = Router();
     // product
-    allAppRouters.use('products', productsRouter);
+    allAppRouters.use('/products', productsRouter);
 
 
 // exporting all endpoints

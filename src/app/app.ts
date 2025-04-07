@@ -26,7 +26,7 @@ class ExpressApp {
         // this.errorHandling();
 
         // defining to use all routers
-        this.app.use(allAppRouters);
+        this.routes()
     };
 
     private essentialMiddlewares(): void {
@@ -36,8 +36,12 @@ class ExpressApp {
         
         // morgan is not suposed to be used in production app enviroment
         if (process.env.NODE_ENV !== "production") {
-        this.app.use(morgan("dev"));
+            this.app.use(morgan("dev"));
         }; 
+    };
+
+    private routes(): void {
+        this.app.use("/e-catalogos", allAppRouters)
     };
 
     // private errorHandling(): void {
