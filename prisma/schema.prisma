@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Brand {
+  id                   Int       @id @default(autoincrement())
+  name                 String    @db.VarChar(45)
+  logoImg              String?   @map("logo_img") @db.VarChar(255)
+  minValue             Decimal   @default(0.00) @map("min_value") @db.Decimal(10, 2)
+  minInstallmentsValue Decimal   @default(0.00) @map("min_installments_value") @db.Decimal(10, 2)
+  visible              Boolean?  @default(true)
+  skuOrder             String?   @map("sku_order") @db.VarChar(255)
+  addressId            Int?      @unique @map("address_id")
+  businessId           Int       @map("business_id")
+  companyId            Int       @map("company_id")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime? @map("updated_at")
+  deletedAt            DateTime? @map("deleted_at")
+  products             Product[]
+
+  @@unique([name, companyId])
+  @@index([businessId], map: "brands_business_id_fkey")
+  @@index([companyId], map: "brands_company_id_fkey")
+  @@map("brands")
+}
+
+model Category {
+  id            Int           @id @default(autoincrement()) @db.UnsignedInt
+  name          String        @db.VarChar(37)
+  createdAt     DateTime?     @default(now()) @map("created_at") @db.Timestamp(0)
+  companyId     Int           @map("company_id")
+  products      Product[]
+  subcategories Subcategory[]
+
+  @@unique([name, companyId])
+  @@index([companyId], map: "categories_company_id_fkey")
+  @@map("categories")
+}
+
+model Subcategory {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  name       String    @db.VarChar(37)
+  categoryId Int       @map("category_id") @db.UnsignedInt
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  products   Product[]
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade, map: "fk_subcategories_categories")
+
+  @@unique([name, categoryId])
+  @@index([categoryId], map: "fk_subcategories_categories")
+  @@map("subcategories")
+}
+
+model Product {
+  id                   Int           @id @default(autoincrement())
+  name                 String        @db.VarChar(255)
+  reference            String        @db.VarChar(30)
+  type                 ProductType   @map("type")
+  gender               ProductGender @map("gender")
+  promptDelivery       Boolean       @map("prompt_delivery")
+  description          String?       @db.VarChar(255)
+  companyId            Int           @map("company_id")
+  erpId                String?       @map("erp_id") @db.VarChar(37)
+  brandId              Int           @map("brand_id")
+  deadlineId           Int?          @map("deadline_id")
+  createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt            DateTime?     @map("updated_at") @db.Timestamp(0)
+  deletedAt            DateTime?     @map("deleted_at") @db.Timestamp(0)
+  categoryId           Int           @map("category_id") @db.UnsignedInt
+  subcategoryId        Int?          @map("subcategory_id") @db.UnsignedInt
+  categoryOrder        Int?          @default(0) @map("category_order") @db.TinyInt
+  compositionData      String?       @map("composition_data") @db.VarChar(255)
+  technicalInformation String?       @map("technical_information") @db.VarChar(255)
+  openGrid             Boolean       @default(false) @map("open_grid")
+  ipi                  Decimal?      @default(0.00) @db.Decimal(10, 2)
+  isDiscontinued       Boolean       @default(false) @map("is_discontinued")
+  isLaunch             Boolean       @default(false) @map("is_launch")
+  isVisible            Boolean       @default(true) @map("is_visible")
+  colection            String?       @db.VarChar(255)
+  brand                Brand         @relation(fields: [brandId], references: [id], onDelete: Cascade, map: "fk_brands_company")
+  category             Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade, map: "fk_categories_products")
+  subcategory          Subcategory?  @relation(fields: [subcategoryId], references: [id], onDelete: Cascade, map: "fk_subcategories_products")
+  variants             Variant[]
+
+  @@unique([erpId, companyId], map: "products_erpId_companyId_key")
+  @@index([categoryId], map: "fk_categories_products")
+  @@index([subcategoryId], map: "fk_subcategories_products")
+  @@index([brandId], map: "products_brandId_fkey")
+  @@index([companyId], map: "products_companyId_fkey")
+  @@index([deadlineId], map: "products_deadlineId_fkey")
+  @@map("products")
+}
+
+model Variant {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(255)
+  hexCode   String?   @map("hex_code") @db.VarChar(7)
+  productId Int       @map("product_id")
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime? @map("updated_at") @db.Timestamp(0)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
+  skus      Sku[]
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade, map: "fk_variants_products")
+
+  @@index([productId], map: "fk_variants_products")
+  @@map("variants")
+}
+
+model Sku {
+  id               Int             @id @default(autoincrement())
+  size             String          @db.VarChar(10)
+  stock            Int
+  price            Decimal         @db.Decimal(10, 2)
+  code             String          @db.VarChar(13)
+  minQuantity      Int?            @default(1) @map("min_quantity")
+  multipleQuantity Int             @map("multiple_quantity")
+  erpId            String?         @unique @db.VarChar(50)
+  variantId        Int             @map("variant_id")
+  cest             String?         @db.VarChar(50)
+  height           Float?
+  length           Float?
+  ncm              String?         @db.VarChar(50)
+  weight           Float?
+  width            Float?
+  createdAt        DateTime        @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt        DateTime?       @map("updated_at") @db.DateTime(0)
+  deletedAt        DateTime?       @map("deleted_at") @db.DateTime(0)
+  priceTablesSkus  PriceTableSku[]
+  variant          Variant         @relation(fields: [variantId], references: [id], onDelete: NoAction)
+
+  @@index([variantId], map: "skus_variant_id_fkey")
+  @@map("skus")
+}
+
+model PriceTable {
+  id              Int             @id @default(autoincrement())
+  description     String          @db.VarChar(255)
+  priceAdjustment Decimal         @default(1.0000) @map("price_adjustment") @db.Decimal(5, 4)
+  minimumValue    Decimal         @map("minimum_value") @db.Decimal(10, 2)
+  visible         Boolean         @default(true)
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime?       @map("updated_at") @db.Timestamp(0)
+  deletedAt       DateTime?       @map("deleted_at") @db.Timestamp(0)
+  companyId       Int             @map("companyId")
+  priceTablesSkus PriceTableSku[]
+
+  @@index([companyId], map: "price_table_company_id_fkey")
+  @@map("price_tables")
+}
+
+model PriceTableSku {
+  id           Int        @id @default(autoincrement())
+  price        Decimal    @default(0.00) @db.Decimal(10, 2)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime?  @map("updated_at") @db.Timestamp(0)
+  skuId        Int        @map("sku_id")
+  priceTableId Int        @map("price_table_id")
+  priceTable   PriceTable @relation(fields: [priceTableId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_price_table")
+  sku          Sku        @relation(fields: [skuId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_price_table_sku")
+
+  @@unique([skuId, priceTableId], map: "unique_sku_price_table")
+  @@index([priceTableId], map: "fk_price_table")
+  @@map("price_tables_skus")
+}
+
+enum ProductType {
+  NACIONAL
+  IMPORTADO
+}
+
+enum ProductGender {
+  MASCULINO
+  FEMININO
+  INFANTIL
+  JUVENIL
+  UNISSEX
+  FAT
+  OUTRO
+}

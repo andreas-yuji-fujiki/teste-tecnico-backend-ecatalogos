@@ -1,0 +1,49 @@
+{
+  "name": "ecatalogos-teste-tecnico-backend",
+  "version": "1.0.0",
+  "description": "Teste técnico para a empresa e-Catálogos, onde é criada uma API REST em Node.js usando Express e TypeScript, com Prisma como ORM conectado a um banco MySQL. A API expõe produtos e suas variantes, e permite CRUD e filtros inteligentes.",
+  "keywords": [
+    "teste-técnico",
+    "typescript",
+    "node",
+    "express",
+    "prisma",
+    "mysql",
+    "cors",
+    "crud"
+  ],
+  "homepage": "https://github.com/andreas-yuji-fujiki/teste-tecnico-backend-ecatalogos#readme",
+  "bugs": {
+    "url": "https://github.com/andreas-yuji-fujiki/teste-tecnico-backend-ecatalogos/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreas-yuji-fujiki/teste-tecnico-backend-ecatalogos.git"
+  },
+  "license": "ISC",
+  "author": "Andreas Yuji Fujiki",
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "dev": "node ts-node src/utils/server.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "env": "^0.0.2",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.14.0",
+    "prisma": "^6.5.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.14.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.3"
+  }
+}
