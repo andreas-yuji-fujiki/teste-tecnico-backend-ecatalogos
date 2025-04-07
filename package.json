@@ -25,7 +25,7 @@
   "type": "module",
   "main": "src/server.ts",
   "scripts": {
-    "dev": "node ts-node src/utils/server.ts"
+    "dev": "ts-node-dev src/server.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
