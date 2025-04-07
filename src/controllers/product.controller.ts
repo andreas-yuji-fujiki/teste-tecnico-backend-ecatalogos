@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { ProductService } from "../services/product.service";
+interface Params {
+  id: string;
+}
 
 export const ProductController = {
   async getAll(req:Request, res:Response) {
@@ -27,5 +30,10 @@ export const ProductController = {
     const productId = req.params.id
     const response = await ProductService.delete(Number(productId))
     res.status(201).json(response);
+  },
+
+  async update(req: Request<Params>, res: Response) {
+    const productId = Number(req.params.id);
+    const updatedData = req.body;  
   }
-};
+}

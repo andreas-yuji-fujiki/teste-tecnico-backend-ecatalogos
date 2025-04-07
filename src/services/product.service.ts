@@ -289,4 +289,121 @@ export class ProductService {
 
     return { message: "Produto deletado com sucesso." };
   };
+
+  static async update(req: Request, res: Response): Promise<void> {
+    try {
+      const { productId } = req.params; // ID do produto a ser atualizado
+      const {
+        name,
+        reference,
+        gender,
+        categoryId,
+        subcategoryId,
+        promptDelivery,
+        description,
+        type,
+        variants,
+        companyId,
+        brandId
+      } = req.body;
+
+      // Verificar se o produto existe
+      const product = await prisma.product.findUnique({
+        where: { id: Number(productId) },
+      });
+
+      if (!product) {
+        res.status(404).json({ error: 'Produto não encontrado' });
+        return;
+      }
+
+      // Verificar se a marca com o brandId existe
+      const brand = await prisma.brand.findUnique({
+        where: { id: brandId },
+      });
+
+      if (!brand) {
+        res.status(400).json({ error: `Marca com ID ${brandId} não existe` });
+        return;
+      }
+
+      // Verificar se a empresa associada à marca existe
+      if (brand.companyId !== companyId) {
+        res.status(400).json({ error: `Marca com ID ${brandId} não está associada à empresa fornecida` });
+        return;
+      }
+
+      // Verificar se a categoria existe
+      const categoryExists = await prisma.category.findUnique({
+        where: { id: categoryId },
+      });
+
+      if (!categoryExists) {
+        res.status(400).json({ error: `Categoria com ID ${categoryId} não existe` });
+        return;
+      }
+
+      // Verificar se a subcategoria existe (se o subcategoryId foi passado)
+      if (subcategoryId) {
+        const subcategoryExists = await prisma.subcategory.findUnique({
+          where: { id: subcategoryId },
+        });
+
+        if (!subcategoryExists) {
+          res.status(400).json({ error: `Subcategoria com ID ${subcategoryId} não existe` });
+          return;
+        }
+      }
+
+      // Atualiza o produto no banco de dados
+      const updatedProduct = await prisma.product.update({
+        where: { id: Number(productId) },
+        data: {
+          name,
+          reference,
+          gender,
+          categoryId,
+          subcategoryId,
+          promptDelivery,
+          description,
+          type,
+          companyId,
+          brandId,
+          variants: {
+            update: variants.map((variant: any) => ({
+              where: { id: variant.id }, // ID da variante a ser atualizada
+              data: {
+                name: variant.name,
+                hex_code: variant.hex_code,
+                skus: {
+                  update: variant.skus.map((sku: any) => ({
+                    where: { id: sku.id }, // ID do SKU a ser atualizado
+                    data: {
+                      size: sku.size,
+                      price: sku.price,
+                      stock: sku.stock,
+                      min_quantity: sku.min_quantity,
+                      multiple_quantity: sku.multiple_quantity,
+                      cest: sku.cest,
+                      height: sku.height,
+                      length: sku.length,
+                      ncm: sku.ncm,
+                      weight: sku.weight,
+                      width: sku.width,
+                    },
+                  })),
+                },
+              },
+            })),
+          },
+        },
+      });
+
+      res.status(200).json(updatedProduct);
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Ocorreu um erro ao atualizar o produto" });
+    }
+  }
 }

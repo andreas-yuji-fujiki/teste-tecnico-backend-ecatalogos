@@ -7,6 +7,7 @@ import { Router } from "express";
     import { getAllProductsMiddleware } from "../middlewares/product/getAllProducts.middleware";    
     import { getProductByIdMiddleware } from "../middlewares/product/getProductById.middleware";
     import { deleteProductMiddleware } from "../middlewares/product/deleteProduct.middleware";
+    import { updateProductMiddleware } from "../middlewares/product/updateProduct.middleware";
     // import createProductMiddleware from "../middlewares/product/createProduct.middleware";
 
 
@@ -26,6 +27,9 @@ const productsRouter = Router();
     
     // delete product
     productsRouter.post('/delete/:id', deleteProductMiddleware, ProductController.delete)
+
+    // update product
+    productsRouter.post('/update', updateProductMiddleware, ProductController.update)
 
 
 // exporting all product routes
