@@ -6,7 +6,7 @@ import { Router } from "express";
 // middlewares import:
     import { getAllProductsMiddleware } from "../middlewares/product/getAllProducts.middleware";    
     import { getProductByIdMiddleware } from "../middlewares/product/getProductById.middleware";
-    import { createProductMiddleware } from "../middlewares/product/createProduct.middleware";
+    import createProductMiddleware from "../middlewares/product/createProduct.middleware";
 
 
 // defining product router
@@ -19,7 +19,7 @@ const productsRouter = Router();
     // get product by id
     productsRouter.get('/:id', getProductByIdMiddleware, ProductController.getById);
     // create product
-    productsRouter.post('/', createProductMiddleware, ProductController.create)
+    productsRouter.post('/create', createProductMiddleware, ProductController.create)
 
 
 // exporting all product routes
