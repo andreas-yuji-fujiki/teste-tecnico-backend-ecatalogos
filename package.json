@@ -22,7 +22,6 @@
   },
   "license": "ISC",
   "author": "Andreas Yuji Fujiki",
-  "type": "module",
   "main": "src/server.ts",
   "scripts": {
     "dev": "ts-node-dev src/server.ts"
